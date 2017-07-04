@@ -1,0 +1,116 @@
+#!/usr/bin/env python
+
+import pygtk
+pygtk.require('2.0')
+import gtk
+import os
+import getpass
+
+class genexit:
+	def __init__(self):
+		self.create_window()
+
+	# Disable all buttons.
+	# This is unused, but a good idea to keep
+	def disable_buttons(self):
+		self.cancel.set_sensitive(False)
+		self.reboot.set_sensitive(False)
+		self.shutdown.set_sensitive(False)
+		self.logoff.set_sensitive(False)
+
+	# Quit the program, not much needs to happen during this
+	def cancel_action(self,btn):
+		gtk.main_quit()
+
+	# Reboot the system
+	def reboot_action(self,btn):
+		self.status.set_label("Rebooting, please standby...")
+		self.button_pressed()
+		os.system("dbus-send --system --print-reply --dest=org.freedesktop.login1 /org/freedesktop/login1 \"org.freedesktop.login1.Manager.Reboot\" boolean:true")
+
+	# Shutdown the system
+	def shutdown_action(self,btn):
+		self.status.set_label("Shutting down, please standby...")
+		self.button_pressed()
+		os.system("dbus-send --system --print-reply --dest=org.freedesktop.login1 /org/freedesktop/login1 \"org.freedesktop.login1.Manager.PowerOff\" boolean:true")
+
+	# Logout of the current user by killing all of their currently running processes
+	def logout_action(self,btn):
+		self.status.set_label("Logging off, pleaase standby...")
+		self.button_pressed()
+		os.system("killall -u " + getpass.getuser())
+
+	# Hide the buttons and show the status when a button is pressed
+	def button_pressed(self):
+		# Disable buttons
+		# self.disable_buttons()
+		# Hide buttons
+		self.button_box.hide()
+		# Show status
+		self.label_box.show()
+		self.status.show()
+
+	def create_window(self):
+		self.window = gtk.Window()
+		title = "Exit"
+		self.window.set_title(title)
+		self.window.set_border_width(5)
+		self.window.set_size_request(500, 70)
+		self.window.set_resizable(False)
+		self.window.set_keep_above(True)
+		self.window.stick
+		self.window.set_position(1)
+		self.window.connect("delete_event", gtk.main_quit)
+		windowicon = self.window.render_icon(gtk.STOCK_QUIT, gtk.ICON_SIZE_MENU)
+		self.window.set_icon(windowicon)
+
+		#Create HBox for buttons
+		self.button_box = gtk.HBox()
+		self.button_box.show()
+
+		# Cancel button
+		self.cancel = gtk.Button(stock = gtk.STOCK_CANCEL)
+		self.cancel.set_border_width(4)
+		self.cancel.connect("clicked", self.cancel_action)
+		self.button_box.pack_start(self.cancel)
+		self.cancel.show()
+
+		# Logoff Button
+		self.logoff = gtk.Button("_Log off")
+		self.logoff.set_border_width(4)
+		self.logoff.connect("clicked", self.logout_action)
+		self.button_box.pack_start(self.logoff)
+		self.logoff.show()
+
+		# Reboot button
+		self.reboot = gtk.Button("_Reboot")
+		self.reboot.set_border_width(4)
+		self.reboot.connect("clicked", self.reboot_action)
+		self.button_box.pack_start(self.reboot)
+		self.reboot.show()
+
+		# Shutdown button
+		self.shutdown = gtk.Button("_Power off")
+		self.shutdown.set_border_width(4)
+		self.shutdown.connect("clicked", self.shutdown_action)
+		self.button_box.pack_start(self.shutdown)
+		self.shutdown.show()
+
+		# Create HBox for status label
+		self.label_box = gtk.HBox()
+		self.status = gtk.Label("Choose an option")
+		self.label_box.pack_start(self.status)
+
+		# Create VBox and pack the buttons above the status
+		self.vbox = gtk.VBox()
+		self.vbox.pack_start(self.button_box)
+		self.vbox.pack_start(self.label_box)
+		self.vbox.show()
+
+		# Add the final VBox to the window
+		self.window.add(self.vbox)
+		self.window.show()
+
+if __name__ == "__main__":
+    go = genexit()
+    gtk.main()
